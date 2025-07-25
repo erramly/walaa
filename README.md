@@ -28,6 +28,6 @@ A modern full-stack starter kit for building single-page applications with Larav
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/laravel-vue-inertia-starter.git
+git clone https://github.com/erramly/walaa.git
 cd laravel-vue-inertia-starter
 ```
