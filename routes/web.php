@@ -51,7 +51,7 @@ Route::middleware(['redirect.if.authenticated:customer'])->group(function () {
 });
 
 
-Route::middleware(['auth:owner'])->group(function () {
+Route::middleware(['auth:owner', 'owner.active'])->group(function () {
     Route::get('/owner/dashboard', [ownerController::class, 'dashboardView'])->name('owner.dashboard');
     Route::get('/owner/dashboard/clients', [ownerController::class, 'clientsDashboardView']);
     Route::get('/owner/dashboard/loyalty-settings', [ownerController::class, 'loyaltySettingsView']);
@@ -61,7 +61,7 @@ Route::middleware(['auth:owner'])->group(function () {
     Route::get('/owner/cashier', [ownerController::class, 'cashierInterface'])->name('owner.cashier');
     // cashier visit
     Route::post('/owner/cashier/visit', [ownerController::class, 'cashierVisit'])->name('owner.cashier.visit');
-    // logout route
+    Route::get('/owner/no-active', [ownerController::class, 'noActiveRestaurant'])->name('owner.noActiveRestaurant');
 
 });
 
@@ -93,6 +93,10 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/admin/signup-for-restaurant', [AdminController::class, 'signupForRestaurant'])->name('admin.signupForRestaurant');
     //delete restaurant
     Route::post('/admin/delete-restaurant/{id}', [AdminController::class, 'deleteOwner'])->name('admin.deleteRestaurant');
+    // update restaurant data
+    Route::post('/admin/update-restaurant/{id}', [AdminController::class, 'updateRestaurantData'])->name('admin.updateRestaurantData');
+    // toggle restaurant status
+    Route::post('/admin/toggle-restaurant-status/{id}', [AdminController::class, 'toggleRestaurantStatus'])->name('admin.toggleRestaurantStatus');
     //logout
     Route::post('/admin/logout', function () {
         Auth::guard('admin')->logout();

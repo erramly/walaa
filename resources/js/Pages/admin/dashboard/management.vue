@@ -37,18 +37,24 @@
                     <div class="p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900">{{ restaurant.name }}</h3>
-                                <p class="text-gray-600 text-sm mt-1">{{ restaurant.address }}</p>
+                                <h3 class="text-lg font-semibold text-gray-900">صاحب المحل: {{ restaurant.owner_name }}
+                                </h3>
+                                <p class="text-gray-600 text-sm mt-1">{{ restaurant.restaurant_location }}</p>
+                                <!-- <p class="text-gray-600 text-sm mt-1">اسم المحل: {{ restaurant.restaurant_name }}</p> -->
                             </div>
-                            <!-- <span
-                                :class="restaurant.status === 'نشط' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                            <span
+                                :class="restaurant.is_active != 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
                                 class="px-2 py-1 text-xs rounded-full">
-                                {{ restaurant.status }}
-                            </span> -->
+                                {{ restaurant.is_active != 0 ? 'نشط' : 'غير نشط' }}
+                            </span>
                         </div>
 
                         <div class="space-y-4">
                             <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">اسم المحل</p>
+                                    <p class="font-semibold text-lg">{{ restaurant.restaurant_name }}</p>
+                                </div>
                                 <div>
                                     <p class="text-gray-500">إجمالي الزيارات</p>
                                     <p class="font-semibold text-lg">{{ restaurant.visits }}</p>
@@ -91,12 +97,12 @@
                                     <Edit class="w-4 h-4 ml-1" />
                                     تعديل
                                 </button>
-                                <!-- <button
-                                    :class="restaurant.status === 'نشط' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'"
+                                <button @click="handleToggleRestaurantStatus(restaurant.id)"
+                                    :class="restaurant.is_active != 0 ? 'text-red-600 bg-red-100 hover:text-red-700' : 'text-green-600 bg-green-100 hover:text-green-700'"
                                     class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center">
                                     <Power class="w-4 h-4 ml-1" />
-                                    {{ restaurant.status === 'نشط' ? 'إيقاف' : 'تفعيل' }}
-                                </button> -->
+                                    {{ restaurant.is_active != 0 ? 'إيقاف' : 'تفعيل' }}
+                                </button>
                                 <button @click="handleDeleteRestaurant(restaurant.id)"
                                     class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-red-600 hover:text-red-700">
                                     <Trash2 class="w-4 h-4" />
@@ -192,6 +198,8 @@ import { Store, Search, Plus, QrCode, Download, Edit, Trash2, Power, ArrowRight 
 import { useForm, router } from '@inertiajs/vue3'
 import updateRestauratnData from '../../../components/ui/updateRestauratnData.vue'
 const props = defineProps(['restaurants'])
+console.log(props.restaurants);
+
 const showUpdateDialog = ref(false)
 const searchTerm = ref('')
 const showAddDialog = ref(false)
@@ -209,15 +217,14 @@ const restaurantUpdate = ref({})
 const updateRestaurant = (restaurant) => {
     showUpdateDialog.value = true
     restaurantUpdate.value = restaurant
-    console.log(restaurant);
 
 }
 const restaurants = ref(props.restaurants)
 
 const filteredRestaurants = computed(() => {
     return restaurants.value.filter(restaurant => {
-        if (restaurant.name) {
-            return restaurant.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+        if (restaurant.restaurant_name) {
+            return restaurant.restaurant_name.toLowerCase().includes(searchTerm.value.toLowerCase())
         }
     })
 })
@@ -237,7 +244,6 @@ const handleDeleteRestaurant = (id) => {
 }
 
 const handleAddRestaurant = () => {
-    console.log('Adding restaurant:', newRestaurant.value)
 
     newRestaurant.post('/admin/signup-for-restaurant', {
         onSuccess: () => {
@@ -248,16 +254,6 @@ const handleAddRestaurant = () => {
             console.error('Failed to add restaurant')
         }
     })
-    // restaurants.value.push({
-    //     id: restaurants.value.length + 1,
-    //     ...newRestaurant.value,
-    //     status: 'نشط',
-    //     visits: 0,
-    //     customers: 0,
-    //     qrCode: `QR${String(restaurants.value.length + 1).padStart(3, '0')}`
-    // })
-    // showAddDialog.value = false
-    // newRestaurant.value = { name: '', phone: '', address: '', visitsRequired: 10 }
     newRestaurant.post('/admin/signup-for-restaurant', {
         onSuccess: () => {
             showAddDialog.value = false
@@ -269,9 +265,15 @@ const handleAddRestaurant = () => {
     })
 
 }
-
-const downloadQR = (restaurantName, qrCode) => {
-    console.log(`Downloading QR for ${restaurantName}: ${qrCode}`)
+const handleToggleRestaurantStatus = (id) => {
+    router.post(`/admin/toggle-restaurant-status/${id}`, {}, {
+        onSuccess: () => {
+            window.location.reload()
+        },
+        onError: (errors) => {
+            console.error('فشل تغيير الحالة:', errors)
+        }
+    })
 }
 
 const goBack = () => {

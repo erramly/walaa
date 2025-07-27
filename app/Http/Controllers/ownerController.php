@@ -316,5 +316,9 @@ class ownerController extends Controller
             'visit' => $visit,
         ]);
     }
-
+    // handle page no active restaurant
+    public function noActiveRestaurant()
+    {
+        return Inertia::render('owner/dashboard/noActive');
+    }
 }

@@ -76,13 +76,15 @@ class AdminController extends Controller
 
             return [
                 'id' => $owner->id,
-                'name' => $restaurant->name,
-                'address' => $restaurant->location,
+                'restaurant_name' => $restaurant->name,
+                'restaurant_location' => $restaurant->location,
+                'owner_name' => $owner->name,
                 'status' => 'نشط',
                 'visits' => $restaurant->visits_count,
                 'customers' => $restaurant->customers_count,
                 'visitsRequired' => optional($restaurant->rewardSettings)->visits_required,
                 'phone' => $owner->phone,
+                'is_active' => $restaurant->is_active,
             ];
         });
 
@@ -168,31 +170,31 @@ class AdminController extends Controller
     */
     public function updateRestaurantData(Request $request, $id)
     {
-        $request->validate([
-            'restaurant_name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'owner_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone_number' => 'required|string|max:20',
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
-
+        //dd($request->all(), $id);
         DB::beginTransaction();
 
         try {
-            $restaurant = Restaurant::findOrFail($id);
-            $restaurant->update([
-                'name' => $request->restaurant_name,
-                'location' => $request->address,
-            ]);
-
-            $owner = $restaurant->owner;
+            $owner = Owner::findOrFail($id);
             $owner->update([
                 'name' => $request->owner_name,
-                'email' => $request->email,
-                'phone' => $request->phone_number,
+
+                'phone' => $request->phone,
             ]);
 
+            $restaurant = $owner->restaurant;
+            $restaurant->update([
+                'name' => $request->restaurant_name,
+                'location' => $request->restaurant_location,
+
+
+            ]);
+            $restaurant->rewardSettings()
+                ->updateOrCreate(
+                    [], // شرط البحث (لا شيء لأن hasOne تربط بسطر واحد)
+                    [
+                        'visits_required' => $request->visitsRequired,
+                    ]
+                );
             if ($request->filled('password')) {
                 $owner->password = bcrypt($request->password);
                 $owner->save();
@@ -206,8 +208,19 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'حدث خطأ أثناء تحديث البيانات.']);
         }
     }
+    public function toggleRestaurantStatus($id)
+    {
+        try {
+            $restaurant = Restaurant::findOrFail($id);
+            $restaurant->is_active = !$restaurant->is_active; // Toggle the status
+            $restaurant->save();
+             //dd($restaurant->is_active);
+            return redirect()->route('admin.management')->with('success', 'تم تحديث حالة المطعم بنجاح.');
+        } catch (\Exception $e) {
+            dd($e->getMessage());
 
-
+        }
+    }
 
 
 }
